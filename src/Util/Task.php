@@ -1102,9 +1102,12 @@ class Task
             $current_money                                    = 0;
         }
 
-        $current_percent = ($buy_times * $unit_price + $current_money) * 100 / $price;
+        $current_percent = $current_money * 100 / $price;
         $fix_percent     = (int)str_replace("%", "", $percent);
 
+        if (RobotServerConfiguration::instance()->is_debug) {
+            mdebug("goods %d price is %d current percent is %s money is %d", $data['gid'], $price, $current_percent  . "%", $current_money);
+        }
         if ($current_percent > $fix_percent) {
             return true;
         }
