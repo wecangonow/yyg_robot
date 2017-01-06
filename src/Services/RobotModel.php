@@ -28,16 +28,13 @@ class RobotModel
 
         $ids = MemcachedService::Get($country . "_task_ids");
 
-        if(!$ids)
-        {
+        if (!$ids) {
             $db = self::GetDbByCountry($country);
 
             $tasks = $db->fetchRowMany($task_sql, ["hour" => $hour]);
 
-            if(count($tasks) > 0)
-            {
-                foreach($tasks as $task)
-                {
+            if (count($tasks) > 0) {
+                foreach ($tasks as $task) {
                     $ids[] = $task['id'];
                 }
 
@@ -45,8 +42,7 @@ class RobotModel
 
                 return $ids;
             }
-            else
-            {
+            else {
                 return [];
             }
         }
@@ -54,33 +50,33 @@ class RobotModel
         return unserialize($ids);
 
     }
-	public static function getZeroHourIdByTaskId($country,$task_id)
-	{
-	    $sql = "select gid from sp_rt_regular where id = :id";
-            $db  = self::GetDbByCountry($country);
-            $gid = $db->fetchRow($sql, ["id" => $task_id])['gid'];
 
-	    $zero_sql = "select id, exec_time from sp_rt_regular where gid = :gid and run_hour=0";
-            $info = $db->fetchRow($zero_sql, ["gid" => $gid]);
-	    return ['gid' => $gid, 'exec_time' =>$info['exec_time'], 'id'=>$info['id']];
-	}
+    public static function getZeroHourIdByTaskId($country, $task_id)
+    {
+        $sql = "select gid from sp_rt_regular where id = :id";
+        $db  = self::GetDbByCountry($country);
+        $gid = $db->fetchRow($sql, ["id" => $task_id])['gid'];
+
+        $zero_sql = "select id, exec_time from sp_rt_regular where gid = :gid and run_hour=0";
+        $info     = $db->fetchRow($zero_sql, ["gid" => $gid]);
+
+        return ['gid' => $gid, 'exec_time' => $info['exec_time'], 'id' => $info['id']];
+    }
 
     public static function GetTaskInfoById($country, $id)
     {
-	$zero_info = self::getZeroHourIdByTaskId($country,$id);
-        $task_sql = "select p.*, g.price, g.unit_price from sp_rt_regular p right join sp_goods g on p.gid = g.id where p.id = :id ";
+        $zero_info = self::getZeroHourIdByTaskId($country, $id);
+        $task_sql  = "select p.*, g.price, g.unit_price from sp_rt_regular p right join sp_goods g on p.gid = g.id where p.id = :id ";
 
         $cache_time = \Yyg\Robot\Configuration\RobotServerConfiguration::instance()->cache_time;
 
         $info      = MemcachedService::Get($country . "_" . $id);
         $exec_time = MemcachedService::Get($country . "_exec_time_" . $zero_info['gid']);
-	if(!$exec_time)
-	{
-             MemcachedService::Set($country . "_exec_time_" . $zero_info['gid'], $zero_info['exec_time'], $cache_time);
-	}
+        if (!$exec_time) {
+            MemcachedService::Set($country . "_exec_time_" . $zero_info['gid'], $zero_info['exec_time'], $cache_time);
+        }
 
-        if(!$info)
-        {
+        if (!$info) {
             $db = self::GetDbByCountry($country);
 
             $task = $db->fetchRowMany($task_sql, ["id" => $id]);
@@ -104,17 +100,16 @@ class RobotModel
 
         $ret = MemcachedService::Get($country . "_robot_list");
 
-        if(!$ret)
-        {
-            $db = self::GetDbByCountry($country);
+        if (!$ret) {
+            $db   = self::GetDbByCountry($country);
             $list = $db->fetchRowMany($robot_sql);
 
             MemcachedService::Set($country . "_robot_list", serialize($list), $cache_time);
         }
-        else
-        {
+        else {
             $list = unserialize($ret);
         }
+
         return $list;
     }
 
@@ -122,13 +117,12 @@ class RobotModel
     {
         //获取执行时间
         $exec_time = $data['exec_time'];
-        if ( $exec_time == 0 )
-        {
+        if ($exec_time == 0) {
             //初始化执行时间
             $data['exec_time'] = self::init_exec_time($data, $country);
 
         }
-            $data['buy_times'] = self::get_buy_times($data);
+        $data['buy_times'] = self::get_buy_times($data);
 
         return $data;
     }
@@ -139,8 +133,8 @@ class RobotModel
         $time = time();
         $time = intval(rand($data['min_time'], $data['max_time']) / $data['speed_x']) + (int)$time;
 
-        $db = self::GetDbByCountry($country);
-        $conds['id']        = $data['id'];
+        $db                   = self::GetDbByCountry($country);
+        $conds['id']          = $data['id'];
         $up_data['exec_time'] = $time;
         $db->update('sp_rt_regular', $conds, $up_data);
 
@@ -148,29 +142,27 @@ class RobotModel
 
     }
 
-
-
     //获取购买次数
     private static function get_buy_times($data)
     {
-	$max = $data['max_buy_times'] * $data['money_x'];
-	$min = $data['min_buy_times'];
+        $max  = $data['max_buy_times'] * $data['money_x'];
+        $min  = $data['min_buy_times'];
         $time = (int)ceil(mt_rand($min, $max));
         //若设置购买上限则最大购买次数为购买上限设置的数值
-        if (self::_maxtime !== 0 && $time > self::_maxtime)
-        {
+        if (self::_maxtime !== 0 && $time > self::_maxtime) {
             $time = self::_maxtime;
         }
+
         return $time;
     }
 
     public static function sync_task($data, $country)
     {
-        $up_data['exec_time'] = self::init_exec_time($data, $country);
+        $up_data['exec_time']         = self::init_exec_time($data, $country);
         $up_data['exec_record_times'] = (int)$data['exec_record_times'] + 1;
-        $up_data['update_time'] = time();
+        $up_data['update_time']       = time();
 
-        $conds['id']  = self::getZeroHourIdByTaskId($country,$data['id'])['id'];
+        $conds['id'] = self::getZeroHourIdByTaskId($country, $data['id'])['id'];
 
         $db = self::GetDbByCountry($country);
 
@@ -183,11 +175,16 @@ class RobotModel
 
         $db = self::GetDbByCountry($country);
 
-        $g_name = $db->fetchRow($sql,["nper_id" => $nper_id])['name'];
+        $g_name = $db->fetchRow($sql, ["nper_id" => $nper_id])['name'];
 
         $time = time();
-        $log = '机器人(' . $rt['nick_name'] . ')于' . date("Y-m-d H:i:s", $time) . '购买了(' . $g_name . ')' . $num . '份';
-        $data = ['nper_id' => $nper_id, 'user' => $rt['id'], 'type' => 'RtRegular','log' => $log, 'create_time' => $time];
+        $log  = '机器人(' . $rt['nick_name'] . ')于' . date("Y-m-d H:i:s", $time) . '购买了(' . $g_name . ')' . $num . '份';
+        $data = ['nper_id'     => $nper_id,
+                 'user'        => $rt['id'],
+                 'type'        => 'RtRegular',
+                 'log'         => $log,
+                 'create_time' => $time,
+        ];
 
         $db->insert("log", $data);
 
@@ -197,42 +194,41 @@ class RobotModel
     {
         $countries = RobotServerConfiguration::instance()->countries;
 
-        if ($country == "")
-        {
+        if ($country == "") {
             die("country name should not be empty");
         }
 
-        if (!in_array($country, $countries))
-        {
+        if (!in_array($country, $countries)) {
             die("no such country in config file");
         }
 
-        switch ($country)
-        {
+        switch ($country) {
             case malaysia:
 
                 $db = MysqlService::GetMalaysiaDB();
+
                 return $db;
 
             case russia:
 
                 $db = MysqlService::GetRussiaDB();
+
                 return $db;
 
             case turkey:
 
                 $db = MysqlService::GetTurkeyDB();
+
                 return $db;
         }
 
     }
 
-
     public static function CloseTask($data, $country)
     {
         $up_data['enable'] = -1;
 
-        $conds['gid']  = $data['gid'];
+        $conds['gid'] = $data['gid'];
 
         $db = self::GetDbByCountry($country);
 
