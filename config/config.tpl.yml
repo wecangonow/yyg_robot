@@ -1,0 +1,36 @@
+is_debug: true
+log_path: /data/logs/robot
+http_port: 8080
+cache_time: 30
+buy_api:
+    api_malaysia:
+        url: http://www.yyg.com/index.php/core/rt/robot_for_remote
+    api_turkey:
+        url: http://www.yyg.com/index.php/core/rt/robot_for_remote
+    api_russia:
+        url: http://www.yyg.com/index.php/core/rt/robot_for_remote
+services:
+    mysql_malaysia:
+        user: root
+        host: 127.0.0.1
+        password: 123456
+        port: 3306
+        dbname: yyg
+        charset: utf8
+    mysql_turkey:
+        user: root
+        host: 127.0.0.1
+        password: 123456
+        port: 3306
+        dbname: yyg
+        charset: utf8
+    mysql_russia:
+        user: root
+        host: 127.0.0.1
+        password: 123456
+        port: 3306
+        dbname: yyg
+        charset: utf8
+    memcache:
+        host: localhost
+        port: 11211

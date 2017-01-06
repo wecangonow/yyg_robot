@@ -1,0 +1,30 @@
+{
+    "name"        : "yyg/robot-server",
+    "description" : "auto run robot client",
+    "type"        : "project",
+    "license"     : "proprietary",
+    "authors"     : [
+        {
+            "name" : "zhongzhi Hao",
+            "email": "haozhongzhi@brotsoft.com"
+        }
+    ],
+    "autoload"    : {
+        "psr-4": {
+            "Yyg\\Robot\\": "src/"
+        }
+    },
+    "require"     : {
+        "symfony/http-foundation": "^2.7",
+        "doctrine/orm": "^2.5",
+        "monolog/monolog": "^1.21",
+        "guzzlehttp/guzzle": "^6.2",
+        "symfony/config": "^3.1",
+        "oasis/config": "^1.0",
+        "symfony/yaml": "^3.1",
+        "oasis/logging": "^1.1",
+        "simplon/mysql": "^1.3",
+        "matyhtf/swoole_framework": "^1.13",
+        "oasis/utils": "^1.6"
+    }
+}

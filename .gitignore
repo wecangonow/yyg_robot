@@ -1,0 +1,4 @@
+vendor
+config/config.yml
+*.log
+*.tmp
