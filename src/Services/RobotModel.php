@@ -15,6 +15,35 @@ class RobotModel
     //物品购买上限(0为无上限)
     const _maxtime = 1000;
 
+    //机器人开启时
+    public static function sync_first_order_time($country)
+    {
+        // 获取所有商品的最后一单时间
+        $time_sql = "select * from (select goods_id, pay_time from sp_order_list  where goods_id in ( select gid from sp_rt_regular where enable = 1 group by `gid` ) and success_num > 0 order by pay_time desc ) as tmp group by goods_id order by `goods_id`
+";
+        $db    = self::GetDbByCountry($country);
+        $times = $db->fetchRowMany($time_sql);
+
+        if(count($times) > 0)
+        {
+            foreach($times as $time)
+            {
+                $condition['gid']          = $time['goods_id'];
+                $exec_time = substr($time['pay_time'], 0 , 10) + mt_rand(3600 , 3600 * 2);
+                $now = time();
+
+                if($exec_time < $now)
+                {
+                    $exec_time = $now + mt_rand(60, 1800);
+                }
+                $up_data['exec_time'] = $exec_time;
+
+                $db->update('sp_rt_regular', $condition, $up_data);
+            }
+        }
+    }
+
+
     /*
      * 将每条任务以key_taskid 为key保存到memcache
      * @return task ids
@@ -66,7 +95,7 @@ class RobotModel
     public static function GetTaskInfoById($country, $id)
     {
         $zero_info = self::getZeroHourIdByTaskId($country, $id);
-        $task_sql  = "select p.*, g.price, g.unit_price from sp_rt_regular p right join sp_goods g on p.gid = g.id where p.id = :id ";
+        $task_sql  = "select p.*, g.price, g.unit_price from sp_rt_regular p right join sp_goods g on p.gid = g.id where p.id = :id and p.enable = 1 ";
 
         $cache_time = \Yyg\Robot\Configuration\RobotServerConfiguration::instance()->cache_time;
 

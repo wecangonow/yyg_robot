@@ -14,8 +14,6 @@ class Task
     //    '国家' => ['任务ID'=> '当前机器人购买金额'],
     //    '国家' => ['任务ID'=> '当前机器人购买金额']
     //]
-    public static $total_money_by_robot = [];
-    public static $file_name;
     public        $buy_numbers          = [
         2,
         70,
@@ -907,10 +905,8 @@ class Task
         10,
     ];
 
-    public function __construct($file_name)
+    public function __construct()
     {
-        self::$file_name            = $file_name;
-        self::$total_money_by_robot = unserialize(file_get_contents($file_name));
     }
 
     public function GetAllTaskIDs()
@@ -976,104 +972,112 @@ class Task
                     }
 
                     //判断机器人购买的数量是否达到上限
-                        //调用远程接口开始
-                        $param   = "url_" . $country;
-                        $uri     = RobotServerConfiguration::instance()->$param;
-                        $buy_num = $this->buy_numbers[mt_rand(0, 887)];
-                        //设置 key  为 country_buy_times_task_id  的上一次购买的次数，如果该次数目跟上一次一样则放弃
+                    //调用远程接口开始
+                    $param   = "url_" . $country;
+                    $uri     = RobotServerConfiguration::instance()->$param;
+                    $buy_num = $this->buy_numbers[mt_rand(0, 887)];
+                    //设置 key  为 country_buy_times_task_id  的上一次购买的次数，如果该次数目跟上一次一样则放弃
 
-                        if ($task['price'] < 500 && $buy_num > 10) {
-                            $buy_num = mt_rand(1, 2);
-                        }
+                    if ($task['price'] < 500 && $buy_num > 10) {
+                        $buy_num = mt_rand(1, 2);
+                    }
 
-                        if ($buy_num != 1 || $buy_num != 2) {
-                            $last_buy_num = MemcachedService::Get($country . "_buy_times_" . $task['id']);
+                    if ($buy_num != 1 || $buy_num != 2) {
+                        $last_buy_num = MemcachedService::Get($country . "_buy_times_" . $task['id']);
 
-                            if ($last_buy_num) {
-                                if ($last_buy_num == $buy_num) {
-                                    $buy_num = mt_rand(1, 2);
-                                }
-                                else {
-                                    MemcachedService::Set($country . "_buy_times_" . $task['id'], $buy_num);
-                                }
-
+                        if ($last_buy_num) {
+                            if ($last_buy_num == $buy_num) {
+                                $buy_num = mt_rand(1, 2);
                             }
                             else {
                                 MemcachedService::Set($country . "_buy_times_" . $task['id'], $buy_num);
                             }
 
                         }
-
-                        $task['buy_times'] = $buy_num;
-
-                        $request_data = [
-                            'id'        => $task['id'],
-                            'uid'       => $rt_uid,
-                            'gid'       => $task['gid'],
-                            'num'       => $task['buy_times'],
-                            'join_type' => $join_type,
-                        ];
-
-                        $ret = $this->post_data($uri, $request_data);
-
-                        if ($ret[0] == -160) {
-                            minfo(
-                                "Country: %s | Goods %d is closed | Reason is %s",
-                                $country,
-                                $task['gid'],
-                                json_encode($ret)
-                            );
-                        }
-
-                        if (isset($ret['1']) && $ret['1'] == "success") {
-                            minfo(
-                                "country: %s : task id %d : excuted delayed %d s robot %d buy goods %d %d yuan",
-                                $country,
-                                $task['id'],
-                                time() - $task['exec_time'],
-                                $rt_uid,
-                                $task['gid'],
-                                $task['unit_price'] * $task['buy_times']
-                            );
-
-                            MemcachedService::Delete($country . "_" . $task['id']);
-
-                            //self::$total_money_by_robot[$country][$task[gid]] += $task['buy_times'] * $task['unit_price'];
-
-                            $buy_total = MemcachedService::Get($country . "_total_money_" . $task['gid'] . "_" . $ret['nper_id']) + $task['buy_times'] * $task['unit_price'];
-
-                            MemcachedService::Set($country . "_total_money_" . $task['gid'] . "_" . $ret['nper_id'], $buy_total, 3600 * 24 * 15);
-
-                            if ($this->reach_money_limit($task, $country, $ret['nper_id'])) {
-                                RobotModel::CloseTask($task, $country);
-                                minfo(
-                                    "Country: %s | Task %d is closed | Reason is up to the participate percent - %s",
-                                    $country,
-                                    $task['id'],
-                                    $task['percent']
-                                );
-                            }
-
-                            // 写远程日志
-                            RobotModel::write_remote_log(
-                                $country,
-                                $ret['nper_id'],
-                                $robots[$r_index],
-                                $task['buy_times']
-                            );
-
-                            //更新任务
-                            RobotModel::sync_task($task, $country);
-
-                        }
                         else {
-                            merror(
-                                "Country: %s | Task %d failed | Reason is %s",
-                                $country,
-                                $task['id'],
-                                json_encode($ret)
+                            MemcachedService::Set($country . "_buy_times_" . $task['id'], $buy_num);
+                        }
+
+                    }
+
+                    $task['buy_times'] = $buy_num;
+
+                    $request_data = [
+                        'id'        => $task['id'],
+                        'uid'       => $rt_uid,
+                        'gid'       => $task['gid'],
+                        'num'       => $task['buy_times'],
+                        'join_type' => $join_type,
+                    ];
+
+                    $ret = $this->post_data($uri, $request_data);
+
+                    if ($ret[0] == -160) {
+                        minfo(
+                            "Country: %s | Goods %d is closed | Reason is %s",
+                            $country,
+                            $task['gid'],
+                            json_encode($ret)
+                        );
+                    }
+
+                    if (isset($ret['1']) && $ret['1'] == "success") {
+
+                        MemcachedService::Delete($country . "_" . $task['id']);
+
+                        minfo(
+                            "country: %s : task id %d : excuted delayed %d s robot %d buy goods %d %d yuan",
+                            $country,
+                            $task['id'],
+                            time() - $task['exec_time'],
+                            $rt_uid,
+                            $task['gid'],
+                            $task['unit_price'] * $task['buy_times']
+                        );
+
+                        //更新任务
+                        RobotModel::sync_task($task, $country);
+
+                        // 写远程日志
+                        RobotModel::write_remote_log(
+                            $country,
+                            $ret['nper_id'],
+                            $robots[$r_index],
+                            $task['buy_times']
+                        );
+
+
+                        $buy_total = $task['buy_times'] * $task['unit_price'];
+
+                        if(!MemcachedService::Increment($country . "_total_money_" . $task['gid'] . "_" . $ret['nper_id'], $buy_total )) {
+
+                            MemcachedService::Set(
+                                $country . "_total_money_" . $task['gid'] . "_" . $ret['nper_id'],
+                                $buy_total,
+                                3600 * 24 * 15
                             );
                         }
+
+                        if ($this->reach_money_limit($task, $country, $ret['nper_id'])) {
+                            RobotModel::CloseTask($task, $country);
+                            minfo(
+                                "Country: %s | Task %d is closed | Reason is up to the participate percent - %s",
+                                $country,
+                                $task['id'],
+                                $task['percent']
+                            );
+                        }
+
+
+                    }
+                    else {
+                        merror(
+                            "Country: %s | Task %d failed | Reason is %s",
+                            $country,
+                            $task['id'],
+                            json_encode($ret)
+                        );
+                    }
 
                 }
 
@@ -1093,20 +1097,26 @@ class Task
 
     public function reach_money_limit($data, $country, $nper_id)
     {
-        $buy_times  = $data['buy_times'];
-        $unit_price = $data['unit_price'];
-        $percent    = $data['percent'];
-        $price      = $data['price'];
-        $current_money =  MemcachedService::Get($country . "_total_money_" . $data['gid'] . "_" . $nper_id) ;
+        $percent       = $data['percent'];
+        $price         = $data['price'];
+        $total_money_key = $country . "_total_money_" . $data['gid'] . "_" . $nper_id;
+        $current_money = MemcachedService::Get($total_money_key);
         if (!$current_money) {
-            $current_money                                    = 0;
+            $current_money = 0;
         }
 
         $current_percent = $current_money * 100 / $price;
         $fix_percent     = (int)str_replace("%", "", $percent);
 
         if (RobotServerConfiguration::instance()->is_debug) {
-            mdebug("goods %d price is %d current percent is %s money is %d", $data['gid'], $price, $current_percent  . "%", $current_money);
+            mdebug(
+                "goods %d price is %d current percent is %s money is %d && total_money_index is %s",
+                $data['gid'],
+                $price,
+                $current_percent . "%",
+                $current_money,
+                $total_money_key
+            );
         }
         if ($current_percent > $fix_percent) {
             return true;
@@ -1140,6 +1150,5 @@ class Task
 
         return json_decode($ret, true);
     }
-
 
 }

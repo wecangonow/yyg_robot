@@ -2,3 +2,5 @@ vendor
 config/config.yml
 *.log
 *.tmp
+.idea
+./composer.lock 

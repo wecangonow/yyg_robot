@@ -27,6 +27,11 @@ class MemcachedService
 
     }
 
+    public static function Increment($key, $offset)
+    {
+        return self::GetInstance()->increment($key, $offset);
+    }
+
     public static function Set($key, $value, $expire = 0)
     {
         self::GetInstance()->set($key, $value, $expire);

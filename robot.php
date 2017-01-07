@@ -7,14 +7,29 @@ use Yyg\Robot\Util\Task;
 use Yyg\Robot\Services\MemUsage;
 use Yyg\Robot\Configuration\RobotServerConfiguration;
 use Oasis\Mlib\Logging\LocalFileHandler;
+use Yyg\Robot\Services\RobotModel;
 
 $dispatch_time = RobotServerConfiguration::instance()->dispatch_time;
 
-$task = new Task("robot_task_buy_money.tmp");
+$countries = RobotServerConfiguration::instance()->countries;
+
+
+date_default_timezone_set("Europe/Istanbul");
+
+// 同步时间为每一期的最后一期最后一单的随机一个时间
+if(count($countries) > 0)
+{
+    foreach($countries as $country)
+    {
+        RobotModel::sync_first_order_time($country);
+    }
+}
+
+
+$task = new Task();
 
 Timer::run($task, $dispatch_time);
 
-file_put_contents("robot_task_buy_money.tmp", "");
 
 while (1) {
     pcntl_signal_dispatch();
