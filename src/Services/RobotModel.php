@@ -38,7 +38,10 @@ class RobotModel
                 }
                 $up_data['exec_time'] = $exec_time;
 
-                $db->update('sp_rt_regular', $condition, $up_data);
+                $update_result = $db->update('sp_rt_regular', $condition, $up_data);
+
+
+                return ['state'=>$update_result, 'gid' => $time['goods_id'], 'exec_time' => $exec_time ];
             }
         }
     }
