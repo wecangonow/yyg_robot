@@ -20,19 +20,22 @@ date_default_timezone_set("Europe/Istanbul");
 // 同步时间为每一期的最后一期最后一单的随机一个时间
 if (count($countries) > 0) {
     foreach ($countries as $country) {
-        $ret = RobotModel::sync_first_order_time($country);
+        $rets = RobotModel::sync_first_order_time($country);
 
-        if (RobotServerConfiguration::instance()->is_debug && $ret['state']) {
-            mdebug(
-                "country: %s :goods id %d next exec time is set to %s ",
-                $country,
-                $ret['gid'],
-                date("Y-m-d H:i:s", $ret['exec_time'])
-            );
+        if (RobotServerConfiguration::instance()->is_debug && count($ret) > 0)  {
+            foreach($rets as $ret) {
+
+                mdebug(
+                    "country: %s :goods id %d next exec time is set to %s ",
+                    $country,
+                    $ret['gid'],
+                    date("Y-m-d H:i:s", $ret['exec_time'])
+                );
+            }
         }
     }
 }
-
+die;
 $task = new Task();
 
 Timer::run($task, $dispatch_time);

@@ -24,6 +24,7 @@ class RobotModel
         $db    = self::GetDbByCountry($country);
         $times = $db->fetchRowMany($time_sql);
 
+        $ret = [];
         if(count($times) > 0)
         {
             foreach($times as $time)
@@ -39,11 +40,15 @@ class RobotModel
                 $up_data['exec_time'] = $exec_time;
 
                 $update_result = $db->update('sp_rt_regular', $condition, $up_data);
-
-
-                return ['state'=>$update_result, 'gid' => $time['goods_id'], 'exec_time' => $exec_time ];
+                if($update_result)
+                {
+                    $ret[] = ['gid' => $time['goods_id'], 'exec_time' => $exec_time];
+                }
             }
+
         }
+
+        return $ret;
     }
 
 
