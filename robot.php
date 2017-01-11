@@ -22,7 +22,7 @@ if (count($countries) > 0) {
     foreach ($countries as $country) {
         $rets = RobotModel::sync_first_order_time($country);
 
-        if (RobotServerConfiguration::instance()->is_debug && count($ret) > 0)  {
+        if (RobotServerConfiguration::instance()->is_debug && count($rets) > 0)  {
             foreach($rets as $ret) {
 
                 mdebug(
@@ -35,7 +35,7 @@ if (count($countries) > 0) {
         }
     }
 }
-die;
+
 $task = new Task();
 
 Timer::run($task, $dispatch_time);

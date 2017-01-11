@@ -30,12 +30,12 @@ class RobotModel
             foreach($times as $time)
             {
                 $condition['gid']          = $time['goods_id'];
-                $exec_time = substr($time['pay_time'], 0 , 10) + mt_rand(3600 , 3600 * 2);
+                $exec_time = substr($time['pay_time'], 0 , 10) + mt_rand(3600 * 3, 3600 * 6);
                 $now = time();
 
                 if($exec_time < $now)
                 {
-                    $exec_time = $now + mt_rand(60, 1800);
+                    $exec_time = $now + mt_rand(3600, 3600 * 3);
                 }
                 $up_data['exec_time'] = $exec_time;
 

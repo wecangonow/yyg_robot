@@ -1029,7 +1029,7 @@ class Task
                             "country: %s : task id %d : excuted delayed %d s robot %d buy goods %d %d yuan",
                             $country,
                             $task['id'],
-                            time() - $task['exec_time'],
+                            time() - $exec_time,
                             $rt_uid,
                             $task['gid'],
                             $task['unit_price'] * $task['buy_times']
