@@ -14,3 +14,4 @@ alter table `sp_rt_regular` Add column percent varchar(10) default "%100" AFTER 
 alter table `sp_rt_regular` Add column run_hour varchar(2) default "0" AFTER `id`;
 alter table `sp_rt_regular` Add column speed_x tinyint(2) default 1 AFTER `id`;
 alter table `sp_rt_regular` Add column money_x tinyint(2) default 1 AFTER `id`;
+alter table `sp_rt_regular` Add column time_cost_per_round varchar(10) default "" AFTER `id`;

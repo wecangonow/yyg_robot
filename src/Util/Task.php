@@ -927,6 +927,11 @@ class Task
     {
 
         foreach ($this->GetAllTaskIDs() as $country => $ids) {
+            //根据国家动态修改时区
+
+            $timezone = RobotServerConfiguration::instance()->timezones[$country];
+            date_default_timezone_set($timezone);
+
 
             if (count($ids) > 0) {
                 $step = 0;

@@ -13,30 +13,32 @@ $dispatch_time = RobotServerConfiguration::instance()->dispatch_time;
 
 $countries = RobotServerConfiguration::instance()->countries;
 
-date_default_timezone_set("Europe/Istanbul");
-
-(new LocalFileHandler(RobotServerConfiguration::instance()->log_path))->install();
+if (RobotServerConfiguration::instance()->init_exec_time) {
 
 // 同步时间为每一期的最后一期最后一单的随机一个时间
-if (count($countries) > 0) {
-    foreach ($countries as $country) {
-        $rets = RobotModel::sync_first_order_time($country);
+    if (count($countries) > 0) {
 
-        if (RobotServerConfiguration::instance()->is_debug && count($rets) > 0)  {
-            foreach($rets as $ret) {
+        foreach ($countries as $country) {
+            $rets = RobotModel::sync_first_order_time($country);
 
-                mdebug(
-                    "country: %s :goods id %d next exec time is set to %s ",
-                    $country,
-                    $ret['gid'],
-                    date("Y-m-d H:i:s", $ret['exec_time'])
-                );
+            if (RobotServerConfiguration::instance()->is_debug && count($rets) > 0) {
+                foreach ($rets as $ret) {
+
+                    mdebug(
+                        "country: %s :goods id %d next exec time is set to %s ",
+                        $country,
+                        $ret['gid'],
+                        date("Y-m-d H:i:s", $ret['exec_time'])
+                    );
+                }
             }
         }
     }
+
 }
 
 $task = new Task();
+
 
 Timer::run($task, $dispatch_time);
 
@@ -52,6 +54,4 @@ while (1) {
     sleep($dispatch_time);
 
 }
-
-
 

@@ -1,7 +1,13 @@
 is_debug: true
+init_exec_time: false
 log_path: /data/logs/robot
 http_port: 8080
 cache_time: 30
+dispatch_time: 5
+countries: ['turkey']
+timezones:
+    turkey: Europe/Istanbul
+    russia: Europe/Moscow
 buy_api:
     api_malaysia:
         url: http://www.yyg.com/index.php/core/rt/robot_for_remote

@@ -8,6 +8,7 @@ use Oasis\Mlib\Config\AbstractYamlConfiguration;
 class RobotServerConfiguration extends AbstractYamlConfiguration
 {
     public $is_debug;
+    public $init_exec_time;
     public $log_path;
     public $services;
     public $mysql_malaysia;
@@ -21,6 +22,7 @@ class RobotServerConfiguration extends AbstractYamlConfiguration
     public $cache_time;
     public $dispatch_time;
     public $countries;
+    public $timezones;
 
     public function load()
     {
@@ -28,7 +30,7 @@ class RobotServerConfiguration extends AbstractYamlConfiguration
             "config.yml",
             [
                 PROJECT_DIR . "/config",
-                "../../"
+                "../../",
 
             ]
         );
@@ -40,13 +42,21 @@ class RobotServerConfiguration extends AbstractYamlConfiguration
         $rootNode    = $treeBuilder->root("robot_server");
         {
             $rootNode->children()->booleanNode("is_debug")->defaultValue(false);
+            $rootNode->children()->booleanNode("init_exec_time")->defaultValue(false);
             $rootNode->children()->scalarNode("log_path")->defaultValue("/tmp");
             $rootNode->children()->integerNode("http_port")->defaultValue(80);
             $rootNode->children()->integerNode("cache_time")->defaultValue(60);
             $rootNode->children()->integerNode("dispatch_time")->defaultValue(1);
             $rootNode->children()->arrayNode("countries")->prototype("scalar");
 
-            $apis     = $rootNode->children()->arrayNode("buy_api");
+            $timezones = $rootNode->children()->arrayNode("timezones");
+            {
+                $timezones->children()->scalarNode("turkey");
+                $timezones->children()->scalarNode("russia");
+                $timezones->children()->scalarNode("malaysia");
+            }
+
+            $apis = $rootNode->children()->arrayNode("buy_api");
             {
                 $api_malaysia = $apis->children()->arrayNode("api_malaysia");
                 {
@@ -61,7 +71,6 @@ class RobotServerConfiguration extends AbstractYamlConfiguration
                     $api_russia->children()->scalarNode("url");
                 }
             }
-
 
             $services = $rootNode->children()->arrayNode("services");
             {
@@ -115,6 +124,7 @@ class RobotServerConfiguration extends AbstractYamlConfiguration
     public function assignProcessedConfig()
     {
         $this->is_debug        = $this->processedConfig["is_debug"];
+        $this->init_exec_time  = $this->processedConfig["init_exec_time"];
         $this->log_path        = $this->processedConfig["log_path"];
         $this->cache_time      = $this->processedConfig["cache_time"];
         $this->dispatch_time   = $this->processedConfig["dispatch_time"];
@@ -127,6 +137,7 @@ class RobotServerConfiguration extends AbstractYamlConfiguration
         $this->url_turkey      = $this->processedConfig["buy_api"]["api_turkey"]["url"];
         $this->url_russia      = $this->processedConfig["buy_api"]["api_russia"]["url"];
         $this->countries       = $this->processedConfig['countries'];
+        $this->timezones       = $this->processedConfig['timezones'];
     }
 
     public function dumpConfig()
