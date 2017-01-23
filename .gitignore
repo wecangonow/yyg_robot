@@ -1,6 +1,8 @@
 vendor
 config/config.yml
 *.log
+*.php
+*.sh
 *.tmp
 .idea
 ./composer.lock 
