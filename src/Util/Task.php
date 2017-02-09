@@ -929,8 +929,8 @@ class Task
         foreach ($this->GetAllTaskIDs() as $country => $ids) {
             //根据国家动态修改时区
 
-            $timezone = RobotServerConfiguration::instance()->timezones[$country];
-            date_default_timezone_set($timezone);
+            //$timezone = RobotServerConfiguration::instance()->timezones[$country];
+            //date_default_timezone_set($timezone);
 
 
             if (count($ids) > 0) {
@@ -1016,6 +1016,16 @@ class Task
                     ];
 
                     $ret = $this->post_data($uri, $request_data);
+                        minfo(
+                            "Country: %s | request data  is %s",
+                            $country,
+                            json_encode($request_data)
+                        );
+                        minfo(
+                            "Country: %s | response data  is %s",
+                            $country,
+                            json_encode($ret)
+                        );
 
                     if ($ret[0] == -160) {
                         minfo(
