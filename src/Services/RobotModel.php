@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: og
- * Date: 16/11/22
- * Time: 下午3:04
- */
 
 namespace Yyg\Robot\Services;
 
@@ -14,6 +8,29 @@ class RobotModel
 {
     //物品购买上限(0为无上限)
     const _maxtime = 1000;
+
+    public static function auto_open_task_per_hour($country = "turkey")
+    {
+        $sql = "select distinct gid from sp_rt_regular where enable = -1 order by rand() limit 1";
+
+        $db    = self::GetDbByCountry($country);
+        $gid = $db->fetchColumn($sql);
+
+        if($gid) {
+            $condition['gid']  = $gid;
+            $up_data = ['enable' => 1];
+            $update_result = $db->update('sp_rt_regular', $condition, $up_data);
+            if($update_result) {
+
+                return 0;
+            } else {
+                return 1;
+            }
+        } else {
+            return 2;
+        }
+
+    }
 
     //机器人开启时
     public static function sync_first_order_time($country)
