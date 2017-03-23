@@ -3113,6 +3113,8 @@ class Task
 
     public function reach_money_limit($data, $country, $nper_id)
     {
+        //不主动关闭任务
+        return false;
         $percent       = $data['percent'];
         $price         = $data['price'];
         $total_money_key = $country . "_total_money_" . $data['gid'] . "_" . $nper_id;
