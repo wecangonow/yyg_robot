@@ -2983,18 +2983,6 @@ class Task
 
                     $task = RobotModel::GetTaskInfoById($country, $id);
 
-                    $gid = $task['gid'];
-
-                    $ignore_setting = $this->getTaskCurrentNperIdAndIgnorePercent($gid);
-                    if($ignore_setting) {
-                        $arr = json_decode(explode("_", $ignore_setting)[1], true);
-                        $rand_index = rand(0,9);
-                        $state = $arr[$rand_index];
-                        mdebug("gid %d ignore setting is %s | rand_index is %d choose state is %s", $gid, $ignore_setting, $rand_index, $state);
-                        if($state) {
-                            continue;
-                        }
-                    }
 
                     //判断是否达到脚本执行时间,购买次数是否符合要求
                     $exec_time = MemcachedService::Get($country . "_exec_time_" . $task['gid']);
@@ -3017,6 +3005,21 @@ class Task
                     ) {
                         $step += 1;
                         continue;
+                    }
+
+                    $gid = $task['gid'];
+
+                    $ignore_setting = $this->getTaskCurrentNperIdAndIgnorePercent($gid);
+                    if($ignore_setting) {
+                        $arr = json_decode(explode("_", $ignore_setting)[1], true);
+                        $rand_index = rand(0,9);
+                        $state = $arr[$rand_index];
+                        mdebug("gid %d ignore setting is %s | rand_index is %d choose state is %s", $gid, $ignore_setting, $rand_index, $state);
+                        if($state) {
+
+                            RobotModel::sync_task($task, $country);
+                            continue;
+                        }
                     }
 
                     $robots  = RobotModel::GetRobot($country);
