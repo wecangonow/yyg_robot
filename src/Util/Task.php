@@ -2909,6 +2909,50 @@ class Task
     {
     }
 
+    public function setTaskCurrentNperIdAndIgnorePercent($gid, $nper_id)
+    {
+        $ignore_number_arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        $key = "goods:current:nper:" . $gid;
+
+        $ignore_number = $ignore_number_arr[rand(0,6)];
+
+        $true_count = 0;
+        $ignore_arr = [];
+        for($i = 0; $i < 10; $i++) {
+            if($true_count < $ignore_number) {
+                $ignore_arr[] = 1;
+                $true_count++;
+            } else {
+                $ignore_arr[] = 0;
+            }
+        }
+        shuffle($ignore_arr);
+        $ignore_string = json_encode($ignore_arr);
+        $value = $nper_id . "_" . $ignore_string;
+
+        mdebug("gid %d , nper_id %d setting ignore to %s | ignore num is %d", $gid, $nper_id, $value, $ignore_number);
+
+        MemcachedService::Set($key, $value);
+
+        return $value;
+    }
+
+    public function getTaskCurrentNperIdAndIgnorePercent($gid, $nper_id = 0)
+    {
+        $key = "goods:current:nper:" . $gid;
+
+        if(MemcachedService::Exists($key)) {
+            return MemcachedService::Get($key);
+        } else {
+            if($nper_id) {
+                return $this->setTaskCurrentNperIdAndIgnorePercent($gid, $nper_id);
+            } else {
+                return false;
+            }
+        }
+
+    }
+
     public function GetAllTaskIDs()
     {
         $countries = RobotServerConfiguration::instance()->countries;
@@ -2938,6 +2982,19 @@ class Task
                 foreach ($ids as $id) {
 
                     $task = RobotModel::GetTaskInfoById($country, $id);
+
+                    $gid = $task['gid'];
+
+                    $ignore_setting = $this->getTaskCurrentNperIdAndIgnorePercent($gid);
+                    if($ignore_setting) {
+                        $arr = json_decode(explode("_", $ignore_setting)[1], true);
+                        $rand_index = rand(0,9);
+                        $state = $arr[$rand_index];
+                        mdebug("gid %d ignore setting is %s | rand_index is %d choose state is %s", $gid, $ignore_setting, $rand_index, $state);
+                        if($state) {
+                            continue;
+                        }
+                    }
 
                     //判断是否达到脚本执行时间,购买次数是否符合要求
                     $exec_time = MemcachedService::Get($country . "_exec_time_" . $task['gid']);
@@ -3037,6 +3094,17 @@ class Task
                     }
 
                     if (isset($ret['1']) && $ret['1'] == "success") {
+
+                        $nper_id = $ret['nper_id'];
+
+                        $ignore_setting = $this->getTaskCurrentNperIdAndIgnorePercent($gid, $nper_id);
+
+                        if($ignore_setting) {
+                            $ignore_setting_nper_id = explode("_", $ignore_setting)[0];
+                            if($ignore_setting_nper_id != $nper_id) {
+                                $this->setTaskCurrentNperIdAndIgnorePercent($gid, $nper_id);
+                            }
+                        }
 
                         MemcachedService::Delete($country . "_" . $task['id']);
 

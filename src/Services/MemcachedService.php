@@ -52,4 +52,13 @@ class MemcachedService
         return self::GetInstance()->delete($key, $time);
     }
 
+    public static function Exists($key)
+    {
+        $m = self::GetInstance();
+        $m->get($key);
+
+        return \Memcached::RES_NOTFOUND !== $m->getResultCode();
+
+    }
+
 }
