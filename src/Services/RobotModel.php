@@ -212,6 +212,17 @@ class RobotModel
 
     public static function sync_task($data, $country)
     {
+        $ids = MemcachedService::Get($country . "_task_ids");
+        if($ids) {
+            $cache_time = \Yyg\Robot\Configuration\RobotServerConfiguration::instance()->cache_time;
+            $task_id = $data['id'];
+            $ids_array = unserialize($ids);
+            mdebug("task list before: %s", serialize($ids_array));
+            unset($ids_array[array_search($task_id, $ids_array)]);
+            mdebug("task list after: %s", serialize($ids_array));
+            mdebug("task %d remove from memcache", $task_id);
+            MemcachedService::Set($country . "_task_ids", serialize($ids_array), $cache_time);
+        }
         $up_data['exec_time']         = self::init_exec_time($data, $country);
         $up_data['exec_record_times'] = (int)$data['exec_record_times'] + 1;
         $up_data['update_time']       = time();
