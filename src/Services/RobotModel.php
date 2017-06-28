@@ -185,7 +185,11 @@ class RobotModel
     private static function init_exec_time($data, $country)
     {
         $time = time();
-        $time = intval(rand($data['min_time'], $data['max_time']) / $data['speed_x']) + (int)$time;
+        $random_sec = intval(rand($data['min_time'], $data['max_time']) / $data['speed_x']);
+
+        $time = $random_sec + (int)$time;
+
+        mdebug("gid is %d task is %d next run time add secs is %d", $data['gid'], $data['id'], $random_sec);
 
         $db                   = self::GetDbByCountry($country);
         $conds['id']          = $data['id'];
